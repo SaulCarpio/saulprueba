@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Ventas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        function calcularMonto() {
+            const cantidad = parseFloat(document.getElementById('cantidad').value);
+            const precioUnitario = parseFloat(document.getElementById('precio_unitario').value);
+            if (!isNaN(cantidad) && !isNaN(precioUnitario)) {
+                document.getElementById('monto_total').value = (cantidad * precioUnitario).toFixed(2);
+            }
+        }
+
+        function calcularCantidad() {
+            const montoTotal = parseFloat(document.getElementById('monto_total').value);
+            const precioUnitario = parseFloat(document.getElementById('precio_unitario').value);
+            if (!isNaN(montoTotal) && !isNaN(precioUnitario) && precioUnitario !== 0) {
+                document.getElementById('cantidad').value = (montoTotal / precioUnitario).toFixed(2);
+            }
+        }
+
+        function actualizarPrecio() {
+            const productoSelect = document.getElementById('producto_id');
+            const precioUnitario = productoSelect.options[productoSelect.selectedIndex].getAttribute('data-precio');
+            document.getElementById('precio_unitario').value = precioUnitario;
+            // Limpiar campos de cantidad y monto total al cambiar el producto
+            document.getElementById('cantidad').value = '';
+            document.getElementById('monto_total').value = '';
+        }
+
+        // Actualizar el precio unitario al cargar la página
+        window.onload = actualizarPrecio;
+    </script>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Registro de Ventas</h1>
+
+        <!-- Botones para añadir cliente y producto -->
+        <div class="text-center mb-4">
+            <a href="/clientes" class="btn btn-primary">Añadir Cliente</a>
+            <a href="/productos" class="btn btn-secondary">Añadir Producto</a>
+        </div>
+
+        <!-- Mensajes de advertencia -->
+        {% if num_clientes == 0 %}
+        <div class="alert alert-warning" role="alert">
+            No hay clientes registrados. <a href="/clientes" class="alert-link">Registrar cliente</a>.
+        </div>
+        {% endif %}
+        {% if num_productos == 0 %}
+        <div class="alert alert-warning" role="alert">
+            No hay productos registrados. <a href="/productos" class="alert-link">Registrar producto</a>.
+        </div>
+        {% endif %}
+
+        <!-- Formulario para agregar ventas -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="card-title">Agregar Venta</h2>
+                <form action="/ventas" method="post">
+                    <div class="mb-3">
+                        <label for="cliente_id" class="form-label">Cliente:</label>
+                        <select id="cliente_id" name="cliente_id" class="form-select" required>
+                            {% for cliente in clientes %}
+                            <option value="{{ cliente[0] }}">{{ cliente[1] }} ({{ cliente[2] }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="producto_id" class="form-label">Producto:</label>
+                        <select id="producto_id" name="producto_id" class="form-select" required onchange="actualizarPrecio()">
+                            {% for producto in productos %}
+                            <option value="{{ producto[0] }}" data-precio="{{ producto[4] }}">{{ producto[1] }} ({{ producto[4] }} Bs.)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="precio_unitario" class="form-label">Precio Unitario:</label>
+                        <input type="number" step="0.01" id="precio_unitario" name="precio_unitario" class="form-control" readonly required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cantidad" class="form-label">Cantidad:</label>
+                        <input type="number" step="0.01" id="cantidad" name="cantidad" class="form-control" oninput="calcularMonto()" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="monto_total" class="form-label">Monto Total:</label>
+                        <input type="number" step="0.01" id="monto_total" name="monto_total" class="form-control" oninput="calcularCantidad()" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fecha_venta" class="form-label">Fecha de Venta:</label>
+                        <input type="date" id="fecha_venta" name="fecha_venta" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Agregar Venta</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Lista de ventas -->
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">Lista de Ventas</h2>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Monto Total</th>
+                            <th>Fecha de Venta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for venta in ventas %}
+                        <tr>
+                            <td>{{ venta[1] }}</td>
+                            <td>{{ venta[2] }}</td>
+                            <td>{{ venta[3] }}</td>
+                            <td>{{ venta[4] }} Bs.</td>
+                            <td>{{ venta[5] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Botón para descargar PDF -->
+        <div class="text-center mt-4">
+            <a href="/download_pdf" class="btn btn-success">Descargar PDF</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
